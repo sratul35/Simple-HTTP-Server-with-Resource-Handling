@@ -28,3 +28,9 @@ python server.py --port PORT_NUMBER
 replace PORT_NUMBER with your desired port number
 
 3. Open your web browser and navigate to http://localhost:PORT_NUMBER/ to view the server's home page.
+
+4. Navigate to http://localhost:PORT_NUMBER/PATH_TO_RESOURCE to view the specified resource.
+
+replace PATH_TO_RESOURCE with the path to the desired resource file
+
+
