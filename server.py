@@ -18,7 +18,23 @@ def handle_client(client_socket):
         print(f"Resource: {resource}")
 
         if method == 'POST':
-            pass
+            user_index = msg.find('user=')
+            if user_index != -1:
+                user_end_index = msg.find('&', user_index)
+                if user_end_index == -1:
+                    user_end_index = len(msg)
+                user_value = msg[user_index + 5:user_end_index]
+            
+            response_header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
+
+            if user_value:
+                decode_user = user_value.replace('+', ' ')
+                response_body = f"<h1>Posted Message:</h1><p>{decode_user}</p>"
+            else:
+                response_body = f"<h1>No User parameter found in the request</h1>"
+
+            response = response_header + response_body
+            client_socket.sendall(response.encode())
 
         elif method == 'GET' and resource is not None:
             with open(f"{resource}", "rb") as f:
