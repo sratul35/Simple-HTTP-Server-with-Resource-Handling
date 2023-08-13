@@ -20,8 +20,10 @@ cd simple-http-server-with-resource-handling
 ```
 
 1. Modify the `urls.py` file to define the mapping between requested URLs and corresponding resource files.
+  
+2. Modify the `mimeType.py` file to define the mapping between file extensions and corresponding MIME types.
 
-2. Run the `server.py` script to start the HTTP server. You can specify a custom port number by adding the --port option followed by your desired port number.
+3. Run the `server.py` script to start the HTTP server. You can specify a custom port number by adding the --port option followed by your desired port number.
 
 python server.py --port PORT_NUMBER
 
