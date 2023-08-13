@@ -1,64 +1,60 @@
 import socket
 import threading
 from urls import *
+from mimeType import *
 
 SERVER_HOST = 'localhost'
 SERVER_PORT = 8080
 
 def handle_client(client_socket):
     try:
-        msg = client_socket.recv(1024).decode()
-        method = msg.split(' ')[0]
-        resource = msg.split(' ')[1]
+        msg = client_socket.recv(1024).decode() #receive data from client
+        method = msg.split(' ')[0] #get the method type from the request like GET, POST, etc.
+        resource = msg.split(' ')[1] #get the resource like /index.html, /about.html, etc.
 
-        print(f"Message: {method}")
-
-        resource = urls.get(resource, None) # None is the default value if the key is not found
-
-        print(f"Resource: {resource}")
+        resource = urls.get(resource, None) #get the resource from the urls.py file
 
         if method == 'POST':
+            # as the message is in the form of a query string, we need to parse it to get the user value
+            # the user value is the value of the user parameter so we need to find the index of the user parameter
             user_index = msg.find('user=')
             if user_index != -1:
                 user_end_index = msg.find('&', user_index)
                 if user_end_index == -1:
                     user_end_index = len(msg)
-                user_value = msg[user_index + 5:user_end_index]
+                user_value = msg[user_index + 5:user_end_index] 
             
             response_header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
 
             if user_value:
-                decode_user = user_value.replace('+', ' ')
+                # as the user is like 'value+value+value' so we need to replace the + with a space
+                decode_user = user_value.replace('+', ' ') 
                 response_body = f"<h1>Posted Message:</h1><p>{decode_user}</p>"
             else:
                 response_body = f"<h1>No User parameter found in the request</h1>"
 
             response = response_header + response_body
-            client_socket.sendall(response.encode())
+            client_socket.sendall(response.encode()) #send the response to the client
 
         elif method == 'GET' and resource is not None:
-            with open(f"{resource}", "rb") as f:
-                # print(f"Resource: {resource}")
-                headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
+            # Determine the file extension
+            file_extension = resource[resource.rfind('.'):].lower()
 
-                # Bonus
-                if resource.endswith('.jpg'):
-                    headers = "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nConnection: close\r\n\r\n"
-                if resource.endswith('.pdf'):
-                    headers = "HTTP/1.1 200 OK\r\nContent-Type: application/pdf\r\nConnection: close\r\n\r\n"
-                if resource.endswith('.mp4'):
-                    headers = "HTTP/1.1 200 OK\r\nContent-Type: video/mp4\r\nConnection: close\r\n\r\n"
-                if resource.endswith('.ico'):
-                    headers = "HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nConnection: close\r\n\r\n"
+            # Retrieve the content type from the mime_types dictionary
+            content_type = mime_types.get(file_extension, 'application/octet-stream')
 
+            headers = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: close\r\n\r\n"
+
+            # Open the requested resource file and read its data
+            with open(resource, "rb") as f:
                 data = f.read()
-                # headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
 
-                response = headers
-                print(f'Length of response: {len(response)}')
-                # print(f'Method: {method}')
-                print(response)
-                client_socket.sendall(response.encode()+data)
+            response = headers.encode() + data 
+
+            print(f"Length of response: {len(response)}")
+            print(f"Length of response with header: {len(response)-len(headers)}")
+            print(f"Method: {method}")
+            client_socket.sendall(response)
         else:
             headers = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
             response = headers + "<h1>404 Not Found</h1>"
